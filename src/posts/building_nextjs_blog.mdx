@@ -1,0 +1,77 @@
+---
+title: "Building your blog in NextJS"
+date: "March 4, 2023"
+author: "Supreet Singh"
+excerpt: "I had this blog running on Ghost for a while but recently I decided to move it to NextJS. Here's how I did it."
+---
+
+Austerity is the name of the game in 2023. I was paying $6 a month to host my Ghost blog on a DigitalOcean droplet.
+With the stock market in shambles and the economy in tatters, I decided to move my blog to  Vercel, which has a generous free tier.
+And as a result, I had to give NextJS a try.
+
+Here are the steps I took:
+
+## Setup
+**1. Create a new NextJS app and follow the interactive setup.**
+```bash
+yarn create next-app
+```
+I chose to follow their experimental appDir structure, which puts all the code in a `src` directory.
+
+**2. Install the necessary dependencies.**
+```bash
+npm install remark remark-rehype rehype-stringify rehype-external-links gray-matter
+```
+Remark/RemarkRehype is a markdown parser which we'll use to convert our markdown files to HTML. RehypeExternalLinks is a plugin for RemarkRehype that adds `target="_blank"` to all external links.
+
+GrayMatter is a library that parses YAML frontmatter from markdown files. We'll use it to extract the metadata from our markdown files.
+
+**3. Pick your favorite CSS library and add it to your project.**
+
+I love [TailwindCSS](https://tailwindcss.com/) so I'll be using it in this project.
+```bash
+Install tailwindcss
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+
+**4. Install next/mdx to use React components directly in your markdown files.**
+```bash
+npm install @next/mdx @mdx-js/loader @mdx-js/react
+```
+Once installed, follow the steps here to make sure your NextJS app can parse MDX files: [https://nextjs.org/docs/advanced-features/using-mdx](https://nextjs.org/docs/advanced-features/using-mdx)
+
+
+## Core concepts
+Check out the full code here. [https://github.com/supreet321/blog](https://github.com/supreet321/blog)
+
+For most blogs, we need to build pages for individual posts and a page for the list of all posts.
+
+To get all posts, we have a helper function `getAllPosts` which returns an array of all the posts. It does this by reading all the files in the `posts` directory and parsing the YAML frontmatter using GrayMatter.
+Once we have the array of posts, we can sort it by date and use this data to build our homepage which displays the list of posts using `PostPreview` component.
+
+Similarly, we have a `PostRenderer` component which is responsible for displaying a single post. It does this by reading the markdown file and parsing it using Remark/RemarkHTML.
+Here, we leverage NextJS's dynamic routing to get the slug of the post from the URL and use it to read the markdown file.
+
+
+
+## Writing posts
+
+Adding new posts is super easy with this setup. All you have to do is create a new markdown file in the `src/posts` directory and add the YAML frontmatter at the top.
+```markdown
+---
+title: "Building your blog in NextJS"
+date: "March 4, 2023"
+author: "Supreet Singh"
+excerpt: "I had this blog running on Ghost for a while but recently I decided to move it to NextJS. Here's how I did it."
+---
+```
+The `title`, `date`, `author` and `excerpt` fields are required. You can add any other fields you want to the frontmatter.
+
+Once you've added the frontmatter, you can start writing your post in markdown. You can also add React components directly in your markdown file.
+The name of the markdown file will be used as the slug for the post. So, if you name your file `my-first-post.md`, the slug for the post will be `my-first-post`.
+
+----------------------
+
+This is it for the basic setup. I'll be adding more features to this blog in the future. If you have any suggestions, feel free to reach out to me on [Twitter](https://twitter.com/supreet321)
+and feel free to check out the code on [GitHub](https://github.com/supreet321/blog)

@@ -1,0 +1,74 @@
+---
+title: "Remote development with VS Code"
+date: "Nov 14, 2022"
+author: "Supreet Singh"
+excerpt: I use a fairly old Macbook Pro for building side projects and my set up these days (Docker + Rails + React) has been putting a huge strain on my measly CPU and therefore, the battery life. So, I'm exploring moving my setup to a remote server to let my machine breathe a bit more. Documenting my learnings along the way.
+---
+I use a fairly old Macbook Pro for building side projects and my set up these days (Docker + Rails + React) has been putting a huge strain on my measly CPU and therefore, the battery life. So, I'm exploring moving my setup to a remote server to let my machine breathe a bit more. Documenting my learnings along the way.
+
+## Prerequisites
+
+* Your local development machine with VSCode installed
+* An AWS account.
+
+## Setting up your AWS instance
+Since I am planning on having a small Rails app + a React app + all the Docker fluff on my EC2 machine, I'm going with a T3a instance type (which gives me 2 VCPUs and 2GB of memory). YMMV so find out your ideal instance type [here](https://aws.amazon.com/ec2/instance-types/).
+
+### Step-by-step guide
+
+1. Launch a new EC2 instance from EC2 dashboard.
+![Image](/images/posts/remote-dev/1.png)
+
+2. Follow the steps to create a new instance. First step is to give your new instance a name.
+![Image](/images/posts/remote-dev/2.png)
+
+3. In the next step, pick the OS you want to use. For most people, the latest Ubuntu makes sense.
+![Image](/images/posts/remote-dev/3.png)
+
+4. Next, select your instance type. I picked t3a.small.
+![Image](/images/posts/remote-dev/4.png)
+
+5. Use a key-pair to login. If you don't have one already, you can create one by clicking on "Create a new key pair" and generating a RSA key.
+![Image](/images/posts/remote-dev/5.png)
+
+6. Clicking the create button will download a file called `dev_server_keys.pem`. Move this file to a safe location on your machine and change the permissions by running `chmod 400 dev_server_keys.pem`. You'll be using this key later to login to your instance.
+
+7. For your VPC, stick with the default VPC.
+
+8. Configure the storage for your instance. I went with 8GB.
+
+9. And that's it. Hit the launch instance button and wait a few minutes for it to boot up.
+
+10. Now, by default, no external traffic will be allowed to access your instance. But since we want to connect to the instance through VSCode, we need to tell AWS to allow SSH traffic. From your EC2 dashboard, go to your security group and add a new inbound rule to allow traffic from a specific IP. Add the IP addresses that you think you'll be accessing this instance from.
+![Image](/images/posts/remote-dev/10.png)
+
+11. From EC2 dashboard, go to your instance (Instances > instance_id) and copy the Public IPv4 DNS. This will be the URL we'll use to connect from our local machine.
+
+12. In your local terminal, run the following command:
+
+> ssh -i /path/to/your/key.pem ubuntu@public_ipv4_dns.compute.amazonaws.com
+
+Replace parts of the command with your own key and public DNS. `ubuntu` is the default username if you picked Ubuntu OS. If you picked a different OS during setup, find your default username [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/managing-users.html).
+
+Once we are able to ssh to the instance from our terminal, the next step is to access it from VSCode.
+
+## Setting up VSCode to connect to your EC2 instance
+Install the Remote-SSH extension from the marketplace
+
+2. At the bottom left corner, you'll see a green box. When you hover over it, a popup with the text "Open a Remote Window" will show up. Click on the green box.
+
+3. Click on `Connect to Host...` and then click on `Configure SSH Hosts...`. This will then prompt you to select your configuration file, pick the one labelled `~/.ssh/config`
+
+4. In your config, enter the following:
+```
+Host your-ipv4-dns.compute.amazonaws.com # Replace this URL with your own
+  AddKeysToAgent yes
+  UseKeychain yes
+  IdentityFile /path/to/your/key.pem # Replace this path with your own
+  User ubuntu
+```
+5. Save this file. Click on the greenbox again, `Connect to Host...` and click on your newly added server. This should open a new VSCode window and in the bottom left, you'll see your server's address.
+
+That's it, now you have a VSCode that's directly connected to an EC2 instance using SSH. Any files you add will be added straight to the remote server.
+
+Happy coding!
